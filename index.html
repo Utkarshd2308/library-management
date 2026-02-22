@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | BJS College Library System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f4f7f6; color: #333; line-height: 1.6; }
+        
+        /* Header */
+        header { 
+            background: #2c3e50; 
+            color: white; 
+            padding: 0.8rem 5%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #ecf0f1;
+        }
+        .logo-img {
+            height: 45px; 
+            width: auto;
+            margin-right: 12px;
+            border-radius: 5px;
+        }
+        .logo-text { 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+        }
+
+        .nav-links { display: flex; list-style: none; }
+        .nav-links li { margin-left: 25px; }
+        .nav-links li a { color: #bdc3c7; text-decoration: none; font-weight: 500; transition: 0.3s; }
+        .nav-links li a:hover { color: white; }
+
+        /* Hamburger Menu Button */
+        .hamburger { 
+            display: none; 
+            cursor: pointer; 
+            font-size: 1.8rem; 
+            color: white; 
+            background: none; 
+            border: none; 
+        }
+
+        /* Sidebar Style */
+        .sidebar { 
+            position: fixed; 
+            left: -250px; 
+            top: 0; 
+            width: 250px; 
+            height: 100%; 
+            background: #2c3e50; 
+            color: white; 
+            transition: 0.3s; 
+            z-index: 2001; 
+            padding: 20px; 
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3); 
+        }
+        .sidebar.active { left: 0; }
+        .sidebar ul { list-style: none; margin-top: 40px; }
+        .sidebar ul li { margin-bottom: 20px; }
+        .sidebar ul li a { color: #bdc3c7; text-decoration: none; font-size: 1.2rem; display: block; }
+        .sidebar ul li a:hover { color: white; }
+        
+        /* Overlay when sidebar is open */
+        .overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 2000; 
+        }
+        .overlay.active { display: block; }
+        
+        .close-btn { 
+            position: absolute; 
+            top: 10px; 
+            right: 20px; 
+            font-size: 2rem; 
+            cursor: pointer; 
+            color: white; 
+            background: none; 
+            border: none; 
+        }
+
+        .hero { background: linear-gradient(rgba(44, 62, 80, 0.2), rgba(44, 62, 80, 0.2)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1500&q=80'); background-size: cover; background-position: center; height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; padding: 0 20px; }
+        .hero h1 { font-size: 3rem; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .hero p { font-size: 1.2rem; max-width: 800px; margin-bottom: 30px; opacity: 0.9; }
+        .cta-btn { background: #27ae60; color: white; padding: 15px 40px; text-decoration: none; font-size: 1.1rem; font-weight: bold; border-radius: 30px; transition: 0.3s; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); }
+        .cta-btn:hover { background: #2ecc71; transform: translateY(-3px); }
+
+        .stats { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 40px 20px;
+            background: white; 
+            margin: -60px auto 40px auto; 
+            border-radius: 15px; 
+            width: 85%; 
+            max-width: 1100px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            position: relative;
+            z-index: 5;
+        }
+        .stat-item { text-align: center; padding: 10px; border-right: 1px solid #eee; }
+        .stat-item:last-child { border-right: none; }
+        .stat-item h2 { font-size: 2.2rem; color: #27ae60; margin-bottom: 5px; }
+        .stat-item p { color: #7f8c8d; font-weight: 600; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        .info-section { padding: 40px 10%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+        .info-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-bottom: 4px solid #2980b9; transition: 0.3s; }
+        .info-card:hover { transform: translateY(-10px); }
+        .info-card h3 { color: #2c3e50; margin-bottom: 15px; display: flex; align-items: center; }
+        .info-card h3 span { font-size: 1.5rem; margin-right: 10px; }
+        
+        .contact-section { padding: 60px 10%; background-color: #f4f7f6; }
+        .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 1000px; margin: auto; }
+        .contact-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid #2980b9; }
+
+        footer { background: #2c3e50; color: #bdc3c7; text-align: center; padding: 30px; margin-top: 50px; }
+        
+        /* Mobile Adjustments */
+        @media (max-width: 768px) { 
+            .hero h1 { font-size: 2.2rem; } 
+            .nav-links { display: none; } 
+            .hamburger { display: block; }
+            .logo-text { font-size: 1.1rem; }
+            .stats { width: 90%; margin-top: -40px; grid-template-columns: 1fr 1fr; } 
+            .stat-item { border-right: none; border-bottom: 1px solid #eee; padding: 20px 10px; }
+            .stat-item:nth-child(even) { border-right: none; }
+            .stat-item:last-child { border-bottom: none; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-container">
+            <img src="unnamed.png" alt="Logo" class="logo-img">
+            <span class="logo-text">BJS College Library</span>
+        </a>
+        
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+
+        <nav>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="books.html">Library</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleSidebar()">×</button>
+        <ul>
+            <li><a href="index.html" onclick="toggleSidebar()">Home</a></li>
+            <li><a href="books.html" onclick="toggleSidebar()">Library</a></li>
+            <li><a href="#contact" onclick="toggleSidebar()">Contact</a></li>
+        </ul>
+    </div>
+
+    <section class="hero">
+        <h1>Center of Knowledge and Information</h1>
+        <p>Welcome to BJS College Library. Here you will find all the essential books, journals, and digital resources needed for your academic excellence in one place.</p>
+        <a href="books.html" class="cta-btn">Explore Books</a>
+    </section>
+
+    <div class="stats">
+        <div class="stat-item">
+            <h2>5,000+</h2>
+            <p>Total Books</p>
+        </div>
+        <div class="stat-item">
+            <h2>2,500+</h2>
+            <p>Students</p>
+        </div>
+        <div class="stat-item">
+            <h2>20+</h2>
+            <p>Magazines</p>
+        </div>
+        <div class="stat-item">
+            <h2>24/7</h2>
+            <p>E-Access</p>
+        </div>
+    </div>
+
+    <section class="info-section">
+        <div class="info-card"><h3><span>📖</span> Our Mission</h3><p>Our main mission is to cultivate a passion for reading among students and provide high-quality books for their academic research and growth.</p></div>
+        <div class="info-card"><h3><span>⚡</span> Modern Facilities</h3><p>Our library offers a digital catalog, high-speed internet, and a peaceful environment perfect for focused study sessions.</p></div>
+        <div class="info-card"><h3><span>📜</span> Rules & Conditions</h3><p>Each student can borrow up to 2 books at a time. It is mandatory to return the books within 15 days, otherwise, a fine will be charged as per rules.</p></div>
+    </section>
+
+    <section id="contact" class="contact-section">
+        <h1 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Contact Us</h1>
+        <div class="contact-grid">
+            <div class="contact-card" style="border-top-color: #2980b9;">
+                <div style="font-size: 2rem; margin-bottom: 10px;">📧</div>
+                <h3 style="color: #2c3e50; margin-bottom: 10px;">Email</h3>
+                <p style="color: #666;">admin@bjs.edu.in</p>
+            </div>
+            <div class="contact-card" style="border-top-color: #27ae60;">
+                <div style="font-size: 2rem; margin-bottom: 10px;">📞</div>
+                <h3 style="color: #2c3e50; margin-bottom: 10px;">Contact No.</h3>
+                <p style="color: #666;">+91 93250 05837</p>
+                <p style="color: #666;">020-27050895</p>
+            </div>
+            <div class="contact-card" style="border-top-color: #e67e22;">
+                <div style="font-size: 2rem; margin-bottom: 10px;">📍</div>
+                <h3 style="color: #2c3e50; margin-bottom: 10px;">Address</h3>
+                <p style="color: #666;">Bakori Phata, Pune-Nagar Road, Wagholi, Pune, Maharashtra 412207</p>
+            </div>
+        </div>
+    </section>
+
+    <footer><p>&copy; 2026 BJS College Library System | All Rights Reserved</p></footer>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

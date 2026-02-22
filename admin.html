@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Library</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f4f7f6; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* Header सुधारित मांडणी */
+        header { 
+            background: #2c3e50; 
+            color: white; 
+            padding: 0.5rem 5%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* लोगो आणि नावामधील अंतर */
+        }
+
+        .header-logo {
+            width: 45px; /* लोगोची रुंदी तुमच्यानुसार बदला */
+            height: 45px;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+
+        .logo-text { font-size: 1.3rem; font-weight: bold; color: white; text-decoration: none; }
+        
+        .nav-links { display: flex; list-style: none; }
+        .nav-links li { margin-left: 20px; }
+        .nav-links li a { color: #bdc3c7; text-decoration: none; font-weight: 500; cursor: pointer; }
+
+        .hamburger { display: none; font-size: 1.8rem; color: white; cursor: pointer; background: none; border: none; }
+
+        /* Sidebar & Overlay */
+        .sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: #2c3e50; transition: 0.3s; z-index: 2001; padding: 20px; color: white; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+        .sidebar.active { left: 0; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; }
+        .overlay.active { display: block; }
+        .sidebar ul { list-style: none; margin-top: 50px; }
+        .sidebar ul li { margin-bottom: 20px; }
+        .sidebar a { color: #bdc3c7; text-decoration: none; font-size: 1.1rem; display: block; }
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 2rem; cursor: pointer; color: white; background: none; border: none; }
+
+        .admin-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin: 20px 5%; }
+        h2 { text-align: center; margin-bottom: 15px; color: #2c3e50; }
+        input, select, .btn-add { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .btn-add { background: #27ae60; color: white; font-weight: bold; border: none; cursor: pointer; }
+        .table-container { overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; min-width: 650px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { background: #34495e; color: white; }
+        .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; }
+        .btn-return { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        .returned-text { color: #27ae60; font-weight: bold; font-size: 0.8rem; }
+        @media (max-width: 768px) { .nav-links { display: none; } .hamburger { display: block; } .admin-card { margin: 15px 3%; } }
+        footer { background: #2c3e50; color: #bdc3c7; text-align: center; padding: 15px; margin-top: auto; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <img src="unnamed.png" alt="Logo" class="header-logo"> 
+            <a href="home.html" class="logo-text">Library Admin Panel</a>
+        </div>
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <nav><ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="books.html">Library</a></li><li><a onclick="showTab('dashboard')">Dashboard</a></li><li><a onclick="showTab('add-book')">New Book</a></li></ul></nav>
+    </header>
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleSidebar()">×</button>
+        <ul><li><a href="index.html">Home</a></li><li><a href="books.html">Library</a></li><li><a onclick="showTab('dashboard'); toggleSidebar()">Dashboard</a></li><li><a onclick="showTab('add-book'); toggleSidebar()">New Book</a></li></ul>
+    </div>
+    <main>
+        <section id="dashboard-section" class="admin-card">
+            <h2>Books Issue Records</h2>
+            <div class="table-container"><table><thead><tr><th>Student</th><th>Book</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="adminTableBody"></tbody></table></div>
+        </section>
+        <section id="add-book-section" class="admin-card" style="display: none;">
+            <h2>Add New Book</h2>
+            <form id="addBookForm"><input type="text" id="newBookTitle" placeholder="Book Name" required><input type="file" id="bookImageFile" accept="image/*" required><select id="newBookCategory" required><option value="">Select Branch</option><option value="BCA">BCA</option><option value="BBA">BBA</option><option value="BSc">BSc</option><option value="BA">BA</option><option value="BCOM">BCOM</option></select><button type="submit" class="btn-add">Save</button></form>
+        </section>
+    </main>
+    <footer><p>&copy; 2026 Admin Dashboard | <span>CodeWave</span></p></footer>
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+        function showTab(t) { document.getElementById('dashboard-section').style.display = (t === 'dashboard' ? 'block' : 'none'); document.getElementById('add-book-section').style.display = (t === 'add-book' ? 'block' : 'none'); }
+        const firebaseConfig = { apiKey: "AIzaSyD04cWX8OyZZoJd9_HWok-t-DzncUI8byg", authDomain: "library-a3690.firebaseapp.com", databaseURL: "https://library-a3690-default-rtdb.firebaseio.com", projectId: "library-a3690", storageBucket: "library-a3690.firebasestorage.app", messagingSenderId: "1021869962766", appId: "1:1021869962766:web:2b2314020a38e6f23a2e5f" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        function getBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result); reader.onerror = e => reject(e); }); }
+        document.getElementById('addBookForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); const file = document.getElementById('bookImageFile').files[0]; const base64 = await getBase64(file);
+            database.ref('books').push({ title: document.getElementById('newBookTitle').value, image: base64, category: document.getElementById('newBookCategory').value, status: "Available" }).then(() => { alert("Book Added!"); document.getElementById('addBookForm').reset(); showTab('dashboard'); });
+        });
+        function returnBook(requestId, bookId) {
+            if(confirm("Confirm Return?")) {
+                database.ref('bookRequests/' + requestId).update({ status: "Returned" });
+                database.ref('books/' + bookId).update({ status: "Available" }).then(() => alert("Entry Updated!"));
+            }
+        }
+        database.ref('bookRequests').on('value', snap => {
+            const tableBody = document.getElementById('adminTableBody'); tableBody.innerHTML = ""; 
+            snap.forEach(c => {
+                const d = c.val(); const id = c.key; const statusColor = d.status === "Returned" ? "#27ae60" : "#f1c40f";
+                tableBody.innerHTML += `<tr><td>${d.studentName}</td><td>${d.bookName}</td><td>${d.issueDate}</td><td><span class="status-tag" style="background:${statusColor}">${d.status}</span></td>
+                    <td>${d.status === "Returned" ? '<span class="returned-text">✓ Returned</span>' : `<button class="btn-return" onclick="returnBook('${id}', '${d.bookId}')">Return</button>`}</td></tr>`;
+            });
+        });
+    </script>
+</body>
+</html>
